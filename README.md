@@ -1,1 +1,1 @@
-# EDAN01---Constraint-Programming
+# EDAN01 - Constraint Programming
