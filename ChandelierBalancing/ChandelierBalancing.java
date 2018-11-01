@@ -31,10 +31,26 @@ public class ChandelierBalancing {
 
     // Define constraints
     store.impose(new Alldiff(weights));
-    store.impose(new XeqY(2*a, 1*b+2*c));
-    store.impose(new XeqY(2*d+1*e, 1*f));
-    store.impose(new XeqY(2*g+1*h, 3*i));
-    store.impose(new XeqY(3*(a+b+c), 2*(d+e+f)+3*(g+h+i)));
+    store.impose(new LinearInt(
+      new IntVar[] {a, b, c},
+      new int[] {-2, 1, 2},
+      "==",
+      0));
+    store.impose(new LinearInt(
+      new IntVar[] {d, e, f},
+      new int[] {-2, -1, 1},
+      "==",
+      0));
+    store.impose(new LinearInt(
+      new IntVar[] {g, h, i},
+      new int[] {-2, -1, 3},
+      "==",
+      0));
+    store.impose(new LinearInt(
+      new IntVar[] {a, b, c, d, e, f, g, h, i},
+      new int[] {-3, -3, -3, 2, 2, 2, 3, 3, 3},
+      "==",
+      0));
 
     System.out.println("Number of variables: "+ store.size() +
                         "\nNumber of constraints: " + store.numberConstraints());
