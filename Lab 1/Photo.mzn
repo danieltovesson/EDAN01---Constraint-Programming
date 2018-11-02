@@ -28,4 +28,4 @@ constraint
 solve maximize cost; % Ask for the highest cost possible
 
 % Print result
-output ["Sequence: " ++ show(seq) ++ "\ncost: " ++ show(cost)]
+output ["Sequence: " ++ show(seq) ++ "\nCost: " ++ show(cost)]
