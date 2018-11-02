@@ -1,15 +1,31 @@
 include "globals.mzn";
 
-% Number of people
-int: n = 9;
+% Get input from user
+int: n; % Number of people
+int: n_prefs; % Number of preferences
+array[1..n_prefs, 1..2] of 1..n: prefs; % Preferences
+int: maxDistance; % Desired max distance between two persons
 
-% Number of preferences
-int: n_prefs = 17;
+% Decision variables
+array[1..n] of var 1..n: seq; % Sequence of persons
+array[1..n_prefs] of var 0..1: fulfilled; % Fulfilled preferences (1=fulfulled, 0=unfulfilled)
+var 0..n_prefs: cost; % Used to maximize the cost (highest number of fulfilled preferences)
 
-% Preferences
-array[1..n_prefs, 1..2] of var int : prefs = [| 1,3 | 1,5 | 1,8 | 2,5 | 2,9 |
-                                          3,4 | 3,5 | 4,1 | 4,5 | 5,6 |
-                                          5,1 | 6,1 | 6,9 | 7,3 | 7,8 |
-                                          8,9 | 8,7 |];
+% Constraints
+constraint
+  alldifferent(seq) /\ % Make sure all people are different
+  forall(i in 1..n_prefs) (
+    % Tries to put the people with max distance between each other
+    if abs(seq[prefs[i, 1]] - seq[prefs[i, 2]]) <= maxDistance 
+      then fulfilled[i] = 1
+      else fulfilled[i] = 0
+    endif
+  ) /\
+  cost = sum(i in 1..n_prefs) (fulfilled[i]) % Counts the number of fulfilled preferences
+;
 
-output[show(prefs)];
+% Solve problem
+solve maximize cost; % Ask for the highest cost possible
+
+% Print result
+output ["Sequence: " ++ show(seq) ++ "\ncost: " ++ show(cost)]
