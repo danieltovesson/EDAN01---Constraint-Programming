@@ -21,7 +21,7 @@ constraint
       else fulfilled[i] = 0
     endif
   ) /\
-  cost = sum(i in 1..n_prefs) (fulfilled[i]) /\ % Counts the number of fulfilled preferences
+  cost = sum([fulfilled[i] | i in 1..n_prefs]) /\ % Counts the number of fulfilled preferences
   cost == n_prefs % Require the cost to be the same as the number of preferences
 ;
 
