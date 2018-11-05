@@ -35,8 +35,10 @@ let {
     %constraint assert({source, target} subset V, "Source and target must be vertexes", true);
 
     constraint path_array[1] == source;
-    constraint path_array[path_nodes_count] == 5 \/ path_array[path_nodes_count] == 6;
-    % TODO: constraint so that target needs to be in path_array
+    constraint sum([if path_array[path_nodes_count] == dest[i] then i else 0 endif | i in 1..n_dest]) != 0;
+    constraint forall(i in 1..n_dest) (
+      sum([if path_array[j] == dest[i] then j else 0 endif | j in 2..path_nodes_count]) != 0
+    );
 
     constraint forall(i in 2..path_nodes_count) (graph[path_array[i-1], path_array[i]] > 0);
 
