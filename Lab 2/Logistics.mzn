@@ -3,8 +3,8 @@ include "globals.mzn";
 % Get input from user
 int: graph_size = 6;
 int: start = 1;
-int: n_dest = 1;
-array[1..n_dest] of 1..graph_size: dest = [6];
+int: n_dest = 2;
+array[1..n_dest] of 1..graph_size: dest = [5,6];
 int: n_edges = 7;
 array[1..n_edges] of 1..graph_size: from = [1,1,2,2,3,4,4];
 array[1..n_edges] of 1..graph_size: to = [2,3,3,4,5,5,6];
@@ -23,7 +23,7 @@ array[1..graph_size] of var int: path;
 array[1..graph_size-1] of var int: path_cost;
 var int: total_cost;
 
-function array [int] of var int: path(array[int,int] of int: graph, int: source, int: target)::promise_total =
+function array [int] of var int: path(array[int,int] of int: graph, int: source, array[int] of int: target)::promise_total =
 let {
     set of int: V = index_set_1of2(graph);
     int: order = card(V);
@@ -32,12 +32,13 @@ let {
     var indexes: path_nodes_count; % the 'size' of the path
 
     constraint assert(index_set_1of2(graph) = index_set_2of2(graph), "The adjacency matrix is not square", true);
-    constraint assert({source, target} subset V, "Source and target must be vertexes", true);
+    %constraint assert({source, target} subset V, "Source and target must be vertexes", true);
 
     constraint path_array[1] == source;
-    constraint path_array[path_nodes_count] == target;
+    constraint path_array[path_nodes_count] == 5 \/ path_array[path_nodes_count] == 6;
+    % TODO: constraint so that target needs to be in path_array
 
-    constraint forall(i in 2..path_nodes_count) (graph[ path_array[i-1], path_array[i] ] > 0);
+    constraint forall(i in 2..path_nodes_count) (graph[path_array[i-1], path_array[i]] > 0);
 
     constraint forall(i in indexes where i > path_nodes_count) (path_array[i] = -1);
 
@@ -45,7 +46,7 @@ let {
 } in path_array;
 
 constraint
-  path = path(adjacency_matrix, start, 6) /\
+  path = path(adjacency_matrix, start, dest) /\
   forall(i in 1..graph_size-1) (
     if path[i+1] != -1
       then path_cost[i] = adjacency_matrix[path[i], path[i+1]]
