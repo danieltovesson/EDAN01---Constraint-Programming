@@ -1,29 +1,38 @@
 include "globals.mzn";
 
 % Get input from user
+% int: graph_size = 6;
+% int: start = 1;
+% int: n_dest = 2;
+% array[1..n_dest] of 1..graph_size: dest = [5,6];
+% int: n_edges = 7;
+% array[1..n_edges] of 1..graph_size: from = [1,1,2,2,3,4,4];
+% array[1..n_edges] of 1..graph_size: to = [2,3,3,4,5,5,6];
+% array[1..n_edges] of int: cost = [4,2,5,10,3,4,11];
 int: graph_size = 6;
 int: start = 1;
 int: n_dest = 2;
 array[1..n_dest] of 1..graph_size: dest = [5,6];
-int: n_edges = 7;
-array[1..n_edges] of 1..graph_size: from = [1,1,2,2,3,4,4];
-array[1..n_edges] of 1..graph_size: to = [2,3,3,4,5,5,6];
-array[1..n_edges] of int: cost = [4,2,5,10,3,4,11];
+int: n_edges = 9;
+array[1..n_edges] of 1..graph_size: from = [1,1,1,2,2,3,3,3,4];
+array[1..n_edges] of 1..graph_size: to = [2,3,4,3,5,4,5,6,6];
+array[1..n_edges] of int: cost = [6,1,5,5,3,5,6,4,2];
 
-% TODO: needs to be created dynamically
-array[1..graph_size, 1..graph_size] of int: adjacency_matrix = [|0, 4,  2, 0,   0, 0
-                                                                |4, 0,  5, 10,  0, 0
-                                                                |2, 5,  0, 0,   3, 0
-                                                                |0, 10, 0, 0,   4, 11
-                                                                |0, 0,  3, 4,   0, 0
-                                                                |0, 0,  0, 11,  0, 0|];
+array[1..graph_size, 1..graph_size] of int: adjacency_matrix = array2d(1..graph_size, 1..graph_size,
+ [
+   sum(
+     [if (from[k] == i /\ to[k] == j) \/ (to[k] == i /\ from[k] == j) then cost[k] else 0 endif | k in 1..n_edges]
+   )
+   | i in 1..graph_size, j in 1..graph_size
+ ]
+); 
 
 % Decision variables
 array[1..graph_size] of var int: path;
 array[1..graph_size-1] of var int: path_cost;
 var int: total_cost;
 
-function array [int] of var int: path(array[int,int] of int: graph, int: source, array[int] of int: target)::promise_total =
+function array [int] of var int: path(array[int,int] of int: graph, int: start, array[int] of int: dest)::promise_total =
 let {
     set of int: V = index_set_1of2(graph);
     int: order = card(V);
@@ -31,10 +40,7 @@ let {
     array[indexes] of var (V union {-1}): path_array;
     var indexes: path_nodes_count; % the 'size' of the path
 
-    constraint assert(index_set_1of2(graph) = index_set_2of2(graph), "The adjacency matrix is not square", true);
-    %constraint assert({source, target} subset V, "Source and target must be vertexes", true);
-
-    constraint path_array[1] == source;
+    constraint path_array[1] == start;
     constraint sum([if path_array[path_nodes_count] == dest[i] then i else 0 endif | i in 1..n_dest]) != 0;
     constraint forall(i in 1..n_dest) (
       sum([if path_array[j] == dest[i] then j else 0 endif | j in 2..path_nodes_count]) != 0
