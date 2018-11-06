@@ -46,6 +46,9 @@ import org.jacop.core.Store;
 
 public class SimpleDFS {
 
+	int totalNodes = 0;
+	int nbrWrongDecisions = 0;
+
 	boolean trace = false;
 
 	/**
@@ -107,8 +110,11 @@ public class SimpleDFS {
 
 		consistent = store.consistency();
 
+		totalNodes++;
+
 		if (!consistent) {
 			// Failed leaf of the search tree
+			nbrWrongDecisions++;
 			return false;
 		} else { // consistent
 
@@ -176,6 +182,8 @@ public class SimpleDFS {
 	public void reportSolution() {
 		if (costVariable != null)
 			System.out.println("Cost is " + costVariable);
+		System.out.println("Total nodes: " + totalNodes);
+		System.out.println("Wrong descisions: " + nbrWrongDecisions);
 
 		for (int i = 0; i < variablesToReport.length; i++)
 			System.out.print(variablesToReport[i] + " ");

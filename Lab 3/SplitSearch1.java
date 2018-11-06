@@ -28,9 +28,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
 import org.jacop.constraints.Not;
 import org.jacop.constraints.PrimitiveConstraint;
-import org.jacop.constraints.XeqC;
+import org.jacop.constraints.XlteqC;
 import org.jacop.core.FailException;
 import org.jacop.core.IntDomain;
 import org.jacop.core.IntVar;
@@ -44,6 +45,9 @@ import org.jacop.core.Store;
  */
 
 public class SplitSearch1 {
+
+	int totalNodes = 0;
+	int nbrWrongDecisions = 0;
 
 	boolean trace = false;
 
@@ -106,8 +110,11 @@ public class SplitSearch1 {
 
 		consistent = store.consistency();
 
+		totalNodes++;
+
 		if (!consistent) {
 			// Failed leaf of the search tree
+			nbrWrongDecisions++;
 			return false;
 		} else { // consistent
 
@@ -175,6 +182,8 @@ public class SplitSearch1 {
 	public void reportSolution() {
 		if (costVariable != null)
 			System.out.println("Cost is " + costVariable);
+		System.out.println("Total nodes: " + totalNodes);
+		System.out.println("Wrong descisions: " + nbrWrongDecisions);
 
 		for (int i = 0; i < variablesToReport.length; i++)
 			System.out.print(variablesToReport[i] + " ");
@@ -193,11 +202,11 @@ public class SplitSearch1 {
 
 		IntVar var;
 		IntVar[] searchVariables;
-		int value;
+		int c;
 
 		public ChoicePoint(IntVar[] v) {
 			var = selectVariable(v);
-			value = selectValue(var);
+			c = calculateMiddlePoint(var);
 		}
 
 		public IntVar[] getSearchVariables() {
@@ -209,14 +218,19 @@ public class SplitSearch1 {
 		 */
 		IntVar selectVariable(IntVar[] v) {
 			if (v.length != 0) {
-
-				searchVariables = new IntVar[v.length - 1];
-				for (int i = 0; i < v.length - 1; i++) {
-					searchVariables[i] = v[i + 1];
+				if (v[0].min() == v[0].max()) {
+					searchVariables = new IntVar[v.length - 1];
+					for (int i = 0; i < v.length - 1; i++) {
+						searchVariables[i] = v[i + 1];
+					}
+					return v[0];
+				} else {
+					searchVariables = new IntVar[v.length];
+					for (int i = 0; i < v.length; i++) {
+						searchVariables[i] = v[i];
+					}
+					return v[0];
 				}
-
-				return v[0];
-
 			} else {
 				System.err.println("Zero length list of variables for labeling");
 				return new IntVar(store);
@@ -226,15 +240,15 @@ public class SplitSearch1 {
 		/**
 		 * example value selection; indomain_min
 		 */
-		int selectValue(IntVar v) {
-			return v.min();
+		int calculateMiddlePoint(IntVar v) {
+			return (v.max() + v.min()) / 2;
 		}
 
 		/**
 		 * example constraint assigning a selected value
 		 */
 		public PrimitiveConstraint getConstraint() {
-			return new XeqC(var, value);
+			return new XlteqC(var, c);
 		}
 	}
 }
