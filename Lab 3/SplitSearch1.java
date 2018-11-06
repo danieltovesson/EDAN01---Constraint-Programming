@@ -217,15 +217,15 @@ public class SplitSearch1 {
 		 */
 		IntVar selectVariable(IntVar[] v) {
 			if (v.length != 0) {
-				selectInputOrder(v);
-				return v[0];
+				//return selectInputOrder(v);
+        return selectFirstFail(v);
 			} else {
 				System.err.println("Zero length list of variables for labeling");
 				return new IntVar(store);
 			}
 		}
 
-    void selectInputOrder(IntVar[] v) {
+    IntVar selectInputOrder(IntVar[] v) {
       if (v[0].min() == v[0].max()) {
         searchVariables = new IntVar[v.length - 1];
         for (int i = 0; i < v.length - 1; i++) {
@@ -234,6 +234,38 @@ public class SplitSearch1 {
       } else {
         searchVariables = v;
       }
+      return v[0];
+    }
+
+    // Total nodes: 57779
+    // Wrong descisions: 28875
+    IntVar selectFirstFail(IntVar[] v) {
+      IntVar smallestDomain = null;
+      int smallestDomainIndex = -1;
+      for (int i = 0; i < v.length; i++) {
+        if (smallestDomain == null || domainSize(smallestDomain) > domainSize(v[i])) {
+          smallestDomain = v[i];
+          smallestDomainIndex = i;
+        }
+      }
+      if (smallestDomain.min() == smallestDomain.max()) {
+        searchVariables = new IntVar[v.length - 1];
+        int count = 0;
+        for (int i = 0; i < v.length - 1; i++) {
+          if (i == smallestDomainIndex) {
+            count++;
+          }
+          searchVariables[i] = v[count];
+          count++;
+        }
+      } else {
+        searchVariables = v;
+      }
+      return smallestDomain;
+    }
+
+    int domainSize(IntVar v) {
+      return v.max() - v.min();
     }
 
 		/**
