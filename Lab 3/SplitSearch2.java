@@ -30,7 +30,7 @@
 
 import org.jacop.constraints.Not;
 import org.jacop.constraints.PrimitiveConstraint;
-import org.jacop.constraints.XlteqC;
+import org.jacop.constraints.XgteqC;
 import org.jacop.core.FailException;
 import org.jacop.core.IntDomain;
 import org.jacop.core.IntVar;
@@ -43,7 +43,7 @@ import org.jacop.core.Store;
  * @version 4.1
  */
 
-public class SplitSearch1 {
+public class SplitSearch2 {
 
 	int totalNodes = 0;
 	int nbrWrongDecisions = 0;
@@ -76,7 +76,7 @@ public class SplitSearch1 {
 	 */
 	public IntVar costVariable = null;
 
-	public SplitSearch1(Store s) {
+	public SplitSearch2(Store s) {
 		store = s;
 	}
 
@@ -217,24 +217,20 @@ public class SplitSearch1 {
 		 */
 		IntVar selectVariable(IntVar[] v) {
 			if (v.length != 0) {
-				selectFirst(v);
+				if (v[0].min() == v[0].max()) {
+					searchVariables = new IntVar[v.length - 1];
+					for (int i = 0; i < v.length - 1; i++) {
+						searchVariables[i] = v[i + 1];
+					}
+				} else {
+					searchVariables = v;
+				}
 				return v[0];
 			} else {
 				System.err.println("Zero length list of variables for labeling");
 				return new IntVar(store);
 			}
 		}
-
-    void selectFirst(IntVar[] v) {
-      if (v[0].min() == v[0].max()) {
-        searchVariables = new IntVar[v.length - 1];
-        for (int i = 0; i < v.length - 1; i++) {
-          searchVariables[i] = v[i + 1];
-        }
-      } else {
-        searchVariables = v;
-      }
-    }
 
 		/**
 		 * example value selection; indomain_min
@@ -247,7 +243,7 @@ public class SplitSearch1 {
 		 * example constraint assigning a selected value
 		 */
 		public PrimitiveConstraint getConstraint() {
-			return new XlteqC(var, c);
+			return new XgteqC(var, c);
 		}
 	}
 }

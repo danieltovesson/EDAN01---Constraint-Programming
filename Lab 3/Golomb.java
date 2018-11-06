@@ -163,6 +163,7 @@ public class Golomb {
 
 		//SimpleDFS search = new SimpleDFS(store);
 		SplitSearch1 search = new SplitSearch1(store);
+		//SplitSearch2 search = new SplitSearch2(store);
 		search.setVariablesToReport(numbers);
 		search.setCostVariable(cost);
 
