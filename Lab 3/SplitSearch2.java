@@ -236,7 +236,7 @@ public class SplitSearch2 {
 		 * example value selection; indomain_min
 		 */
 		int calculateMiddlePoint(IntVar v) {
-			return (v.max() + v.min()) / 2;
+			return (v.max() + v.min() + 1) / 2;
 		}
 
 		/**
