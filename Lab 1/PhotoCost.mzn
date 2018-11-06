@@ -15,7 +15,12 @@ constraint
   alldifferent(seq) /\ % Make sure all people are different
   forall(i in 1..n_prefs) (
     % Tries to put the people with max distance between each other
-    if abs(seq[prefs[i, 1]] - seq[prefs[i, 2]]) <= 1 
+    if
+      abs(
+        sum([if seq[j] == prefs[i, 1] then j else 0 endif | j in 1..n]) - 
+        sum([if seq[j] == prefs[i, 2] then j else 0 endif | j in 1..n])
+      )
+      = 1 
       then fulfilled[i] = 1
       else fulfilled[i] = 0
     endif
