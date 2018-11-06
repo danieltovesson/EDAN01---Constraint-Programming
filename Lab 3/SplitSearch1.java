@@ -217,7 +217,7 @@ public class SplitSearch1 {
 		 */
 		IntVar selectVariable(IntVar[] v) {
 			if (v.length != 0) {
-				selectFirst(v);
+				selectInputOrder(v);
 				return v[0];
 			} else {
 				System.err.println("Zero length list of variables for labeling");
@@ -225,7 +225,7 @@ public class SplitSearch1 {
 			}
 		}
 
-    void selectFirst(IntVar[] v) {
+    void selectInputOrder(IntVar[] v) {
       if (v[0].min() == v[0].max()) {
         searchVariables = new IntVar[v.length - 1];
         for (int i = 0; i < v.length - 1; i++) {
