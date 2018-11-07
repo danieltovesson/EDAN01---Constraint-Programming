@@ -40,24 +40,30 @@ array[1..graph_size] of var 1..graph_size: path;
 array[1..graph_size-1] of var 1..max(cost): path_costs;
 var int: total_cost;
 
+% Constraint path so a subcircuit
 constraint subcircuit(path);
 
+% Make sure the first node is the start symbol
 constraint path[1] = start;
 
+% Make sure the last node is one of the dest nodes
 constraint path[graph_size] = 6;
 
+% Make sure the path is valid
 constraint
   forall(i in 1..graph_size-1) (
     adjacency_matrix[path[i], path[i+1]] != 0
   )
 ;
 
+% Create path costs array
 constraint
   forall(i in 1..graph_size-1) (
     path_costs[i] = adjacency_matrix[path[i], path[i+1]]
   )
 ;
-  
+
+% Sum total cost
 constraint total_cost = sum([path_costs[i] | i in 1..graph_size-1]);
 
 % Minimize the total cost 
