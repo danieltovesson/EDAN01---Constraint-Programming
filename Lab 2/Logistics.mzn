@@ -36,73 +36,37 @@ array[1..graph_size, 1..graph_size] of int: adjacency_matrix = array2d(1..graph_
 ); 
 
 % Decision variables
-array[1..graph_size] of var int: path;
-array[1..graph_size-1] of var int: path_cost;
+array[1..graph_size] of var 1..graph_size: path;
+array[1..graph_size-1] of var 1..max(cost): path_costs;
 var int: total_cost;
-var int: total_traceback;
 
-% Function for getting a path through the adjacency matrix
-function array[int] of var int: path(array[int,int] of int: adjacency_matrix, int: start, array[int] of int: dest) =
-let {
-    set of int: V = index_set_1of2(adjacency_matrix);
-    array[1..graph_size] of var (V union {-1}): path_array;
-    var 1..graph_size: n_nodes;
+constraint subcircuit(path);
 
-    % Make sure the path array starts with the start symbol
-    constraint path_array[1] == start;
-    
-    % Make sure the last node is one of the destination nodes
-    constraint sum([if path_array[n_nodes] == dest[i] then i else 0 endif | i in 1..n_dest]) != 0;
-    
-    % Make sure the path array contains all the destination nodes
-    constraint forall(i in 1..n_dest) (
-      sum([if path_array[j] == dest[i] then j else 0 endif | j in 2..n_nodes]) != 0
-    );
+constraint path[1] = start;
 
-    % Make sure the path is consistent with from-to
-    constraint forall(i in 2..n_nodes) (adjacency_matrix[path_array[i-1], path_array[i]] > 0);
+constraint path[graph_size] = 6;
 
-    % Give the last indexes in the path array the value -1 if the path size is smaller than the array size
-    constraint forall(i in 1..graph_size where i > n_nodes) (path_array[i] = -1);
-} in path_array;
-
-% Get a path
-constraint path = path(adjacency_matrix, start, dest);
-
-% Calculate the path cost array
 constraint
   forall(i in 1..graph_size-1) (
-    if path[i+1] != -1
-      then path_cost[i] = adjacency_matrix[path[i], path[i+1]]
-      else path_cost[i] = 0
-    endif
+    adjacency_matrix[path[i], path[i+1]] != 0
   )
 ;
 
-% Calculate the traceback (where the path traversed back to the previous node)
 constraint
-  total_traceback = sum(
-    [
-      if path[i+2] != -1 /\ path[i] == path[i+2]
-        then path_cost[i]
-        else 0
-      endif
-      | i in 1..graph_size-2
-    ]
+  forall(i in 1..graph_size-1) (
+    path_costs[i] = adjacency_matrix[path[i], path[i+1]]
   )
 ;
+  
+constraint total_cost = sum([path_costs[i] | i in 1..graph_size-1]);
 
-% Calculate the total cost for the whole path
-constraint total_cost = sum([path_cost[i] | i in 1..graph_size-1]);
-
-% Minimize the cost to traverse through the paths 
-solve minimize total_cost - total_traceback;
+% Minimize the total cost 
+solve minimize total_cost;
 
 % Print result
 output[
   "Path: " ++ show(path) ++
-  "\nPath cost: " ++ show(path_cost) ++
+  "\nPath costs: " ++ show(path_costs) ++
   "\nTotal cost: " ++ show(total_cost) ++
-  "\nTotal traceback: " ++ show(total_traceback) ++
-  "\nSum: " ++ show(total_cost - total_traceback)
+  "\nGraph: " ++ show(adjacency_matrix)
 ]
