@@ -217,20 +217,94 @@ public class SplitSearch2 {
 		 */
 		IntVar selectVariable(IntVar[] v) {
 			if (v.length != 0) {
-				if (v[0].min() == v[0].max()) {
-					searchVariables = new IntVar[v.length - 1];
-					for (int i = 0; i < v.length - 1; i++) {
-						searchVariables[i] = v[i + 1];
-					}
-				} else {
-					searchVariables = v;
-				}
-				return v[0];
+				return selectInputOrder(v);
+				//return selectFirstFail(v);
+				//return selectMostConstrained(v);
 			} else {
 				System.err.println("Zero length list of variables for labeling");
 				return new IntVar(store);
 			}
 		}
+		IntVar selectInputOrder(IntVar[] v) {
+			if (v[0].min() == v[0].max()) {
+				searchVariables = new IntVar[v.length - 1];
+				for (int i = 0; i < v.length - 1; i++) {
+					searchVariables[i] = v[i + 1];
+				}
+			} else {
+				searchVariables = v;
+			}
+			return v[0];
+		}
+
+		//Total nodes: 1575580
+		//Wrong descisions: 787257
+		IntVar selectFirstFail(IntVar[] v) {
+			IntVar smallestDomain = null;
+			int smallestDomainIndex = -1;
+			for (int i = 0; i < v.length; i++) {
+				if (smallestDomain == null || domainSize(smallestDomain) > domainSize(v[i])) {
+					smallestDomain = v[i];
+					smallestDomainIndex = i;
+				}
+			}
+			if (smallestDomain.min() == smallestDomain.max()) {
+				searchVariables = new IntVar[v.length - 1];
+				int count = 0;
+				for (int i = 0; i < v.length - 1; i++) {
+					if (i == smallestDomainIndex) {
+						count++;
+					}
+					searchVariables[i] = v[count];
+					count++;
+				}
+			} else {
+				searchVariables = v;
+			}
+			return smallestDomain;
+		}
+
+		//choose the variable with the fewest legal values.
+		//Total nodes: 131712
+		//Wrong descisions: 65007
+		IntVar selectMostConstrained(IntVar[] v){
+
+			searchVariables = new IntVar[v.length - 1];
+			for (int i = 0; i < v.length - 1; i++) {
+				searchVariables[i] = v[i + 1];
+			}
+
+			int maxConstraintsIndex = 0;
+
+			//retrieves the current(index) number of constraints which are associated with
+			//a variable and are not yet satisfied.
+			for (int i = 0; i < v.length; i++) {
+				if (v[i].sizeConstraints() > maxConstraintsIndex) { maxConstraintsIndex = i; }
+			}
+			//pass search variables...
+			for (int i = 0; i < v.length - 1; i++) {
+				if (i < maxConstraintsIndex) {
+					searchVariables[i] = v[i];
+				} else {
+					searchVariables[i] = v[i + 1];
+				}
+			}
+
+			//When we find the option with most constraints, keep it.
+			if (v[maxConstraintsIndex].getSize() == 1) {
+				return v[maxConstraintsIndex];
+			} else {
+				searchVariables = v;
+			}
+			//returns the variable with most constrains.
+			return v[maxConstraintsIndex];
+
+		}
+
+		int domainSize(IntVar v) {
+			return v.max() - v.min();
+		}
+
 
 		/**
 		 * example value selection; indomain_min
