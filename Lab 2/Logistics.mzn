@@ -39,7 +39,9 @@ constraint adjacency_matrix = array2d(1..graph_size, 1..graph_size,
      endif
    | i in 1..graph_size, j in 1..graph_size
  ]
-); 
+);
+
+% TODO: Does not work when node is next node
 
 % Decision variables
 array[1..n_dest, 1..graph_size] of var 1..graph_size: subcircuits;
@@ -116,7 +118,9 @@ constraint
 ;
 
 % Sum total cost
-constraint total_cost = sum([if path_costs[i, j] != -1 then path_costs[i, j] else 0 endif | i in 1..n_dest, j in 1..graph_size]);
+constraint total_cost =
+  sum([if path_costs[i, j] != -1 then path_costs[i, j] else 0 endif | i in 1..n_dest, j in 1..graph_size]) - 
+  sum([if path_costs[i, j] == path_costs[i+1, j] then path_costs[i, j] else 0 endif | i in 1..n_dest-1, j in 1..graph_size]);
 
 % Minimize the total cost 
 solve minimize total_cost;
