@@ -24,7 +24,7 @@ array[1..n_edges] of int: cost = h_cost;
 array[1..graph_size, 1..graph_size] of var int: adjacency_matrix;
 constraint adjacency_matrix = array2d(1..graph_size, 1..graph_size,
  [
-   if (i == 1 /\ j == 6) \/ (i == 6 /\ j == 1)
+   if (i == start /\ has_element(j , dest)) \/ (has_element(i , dest) /\ j == start)
      then -1
      else
        sum(
@@ -73,14 +73,24 @@ constraint
 
 % Constraint start and destination of path
 constraint subcircuit[start] != start;
-constraint subcircuit[start] != 6;
+constraint
+  forall(i in 1..n_dest) (
+    subcircuit[start] != dest[i]
+  )
+;
+constraint
+  forall(i in 1..n_dest) (
+    subcircuit[dest[i]] = start
+  )
+;
 
 % Calculate the length of the path
 constraint path_length = sum([if subcircuit[i] != i then 1 else 0 endif | i in 1..graph_size]);
 
 % Construct the path
+constraint path[1] = start;
 constraint
-  forall(i in 1..path_length) (
+  forall(i in 1..path_length-1) (
     path[i+1] = subcircuit[path[i]]
   )
 ;
