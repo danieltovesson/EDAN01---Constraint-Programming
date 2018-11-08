@@ -62,7 +62,7 @@ constraint
   )
 ;
 
-% Make sure no forbidden paths can be traversed and make sure nodes can go to themselves
+% Make sure no forbidden paths can be traversed and that nodes can go to themselves
 constraint
   forall(i in 1..graph_size, j in 1..graph_size) (
     if adjacency_matrix[i, j] == 0 /\ i != j
@@ -71,16 +71,20 @@ constraint
   )
 ;
 
-% Constraint start and destination of path
-constraint subcircuit[start] != start;
+% Constraint so that it can't traverse from start node directly to destination nodes
 constraint
   forall(i in 1..n_dest) (
     subcircuit[start] != dest[i]
   )
 ;
+
+% Make sure start node is included in path
+constraint subcircuit[start] != start;
+
+% Make sure destination nodes are included in path
 constraint
   forall(i in 1..n_dest) (
-    subcircuit[dest[i]] = start
+    subcircuit[dest[i]] != dest[i]
   )
 ;
 
