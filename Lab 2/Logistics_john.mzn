@@ -39,7 +39,7 @@ constraint forall(i in 1..n_dests, j in 1..graph_size)(
 	subcircuitPath[i,j] in allPaths[i,j]
 );
 
-% find viable subcircuit based on nodes.
+% find viable subcircuit based on destination nodes.
 constraint forall (i in 1..n_dests)(
 	subcircuit([subcircuitPath[i,j] | j in 1..graph_size])
 );
@@ -68,8 +68,7 @@ constraint forall(i in 1..n_dests, j in 1..graph_size)(
 constraint
   forall(i in 1..graph_size, j in 1..n_dests) (
     path_costs[i] = sum(j in 1..graph_size)(nodesVisited[i,j])
-  )
-;
+  );
 
 % Sum total cost
 constraint total_cost = sum([path_costs[i] | i in 1..graph_size-1]);
