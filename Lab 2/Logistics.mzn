@@ -3,8 +3,8 @@ include "globals.mzn";
 % Get input from user (prefix is for parameter input field order)
 int: a_graph_size;
 int: b_start;
-int: c_n_dest;
-array[1..c_n_dest] of 1..a_graph_size: d_dest;
+int: c_n_dests;
+array[1..c_n_dests] of 1..a_graph_size: d_dest;
 int: e_n_edges;
 array[1..e_n_edges] of 1..a_graph_size: f_from;
 array[1..e_n_edges] of 1..a_graph_size: g_to;
@@ -13,53 +13,61 @@ array[1..e_n_edges] of int: h_cost;
 % Input variables
 int: graph_size = a_graph_size;
 int: start = b_start;
-int: n_dest = c_n_dest;
-array[1..n_dest] of 1..graph_size: dest = d_dest;
+int: n_dests = c_n_dests;
+array[1..n_dests] of 1..graph_size: dest = d_dest;
 int: n_edges = e_n_edges;
 array[1..n_edges] of 1..graph_size: from = f_from;
 array[1..n_edges] of 1..graph_size: to = g_to;
 array[1..n_edges] of int: cost = h_cost;
 
 % Create adjacency matrix
-array[1..graph_size, 1..graph_size] of var int: adjacency_matrix;
-constraint adjacency_matrix = array2d(1..graph_size, 1..graph_size,
- [
-   if (i == start /\ has_element(j , dest)) \/ (has_element(i , dest) /\ j == start)
-     then -1
-     else
-       sum(
-         [
-           if (i == from[k] /\ j == to[k]) \/ (i == to[k] /\ j == from[k])
-             then cost[k]
-             else 0
-           endif
-           | k in 1..n_edges
-         ]
-       )
-     endif
-   | i in 1..graph_size, j in 1..graph_size
- ]
+array[1..graph_size, 1..graph_size] of var -1..max(cost): adjacency_matrix = array2d(1..graph_size, 1..graph_size,
+  [
+    if sum(
+      [
+        if (i == from[k] /\ j == to[k]) \/ (i == to[k] /\ j == from[k])
+          then cost[k]
+          else 0
+        endif
+        | k in 1..n_edges
+      ]
+    ) > 0
+      then sum(
+      [
+        if (i == from[k] /\ j == to[k]) \/ (i == to[k] /\ j == from[k])
+          then cost[k]
+          else 0
+        endif
+        | k in 1..n_edges
+      ])
+      else
+        if (i == start /\ has_element(j , dest)) \/ (has_element(i , dest) /\ j == start)
+          then -1
+          else 0
+        endif
+      endif
+    | i in 1..graph_size, j in 1..graph_size
+  ]
 );
 
-% TODO: Does not work when node is next node
-
 % Decision variables
-array[1..n_dest, 1..graph_size] of var 1..graph_size: subcircuits;
-array[1..n_dest, 1..graph_size] of var 0..graph_size: paths;
-array[1..n_dest, 1..graph_size] of var -1..max(cost): path_costs;
-array[1..n_dest] of var 1..graph_size-1: path_lengths;
+array[1..graph_size, 1..graph_size] of var 0..1: adjacency_matrix_used;
+array[1..n_dests, 1..graph_size] of var 1..graph_size: subcircuits;
+array[1..n_dests, 1..graph_size] of var 0..graph_size: paths;
+array[1..n_dests, 1..graph_size] of var -1..max(cost): path_costs;
+array[1..n_dests] of var 1..graph_size-1: path_lengths;
 var int: total_cost;
 
 % Constraint to subcircuits
 constraint
-  forall(i in 1..n_dest) (
+  forall(i in 1..n_dests) (
     subcircuit([subcircuits[i, j] | j in 1..graph_size])
   )
 ;
 
 % Constraint each subcircuit value with a corresponding cost 
 constraint
-  forall(i in 1..n_dest, j in 1..graph_size) (
+  forall(i in 1..n_dests, j in 1..graph_size) (
     element(
       subcircuits[i, j],
       [adjacency_matrix[j, k] | k in 1..graph_size],
@@ -70,7 +78,7 @@ constraint
 
 % Make sure no forbidden paths can be traversed and that nodes can go to themselves
 constraint
-  forall(i in 1..n_dest, j in 1..graph_size, k in 1..graph_size) (
+  forall(i in 1..n_dests, j in 1..graph_size, k in 1..graph_size) (
     if adjacency_matrix[j, k] == 0 /\ j != k
       then subcircuits[i, j] != k
     endif
@@ -79,57 +87,75 @@ constraint
 
 % Constraint so that it can't traverse from start node directly to destination nodes
 constraint
-  forall(i in 1..n_dest, j in 1..n_dest) (
-    subcircuits[i, start] != dest[j]
+  forall(i in 1..n_dests, j in 1..n_dests) (
+    path_costs[i, start] != -1
   )
 ;
 
 % Make sure start node is included in path
 constraint
-  forall(i in 1..n_dest) (
+  forall(i in 1..n_dests) (
     subcircuits[i, start] != start
   )
 ;
 
 % Make sure destination nodes are included in path
 constraint
-  forall(i in 1..n_dest) (
+  forall(i in 1..n_dests) (
     subcircuits[i, dest[i]] = start
   )
 ;
 
 % Calculate the length of the path
 constraint
-  forall(i in 1..n_dest) (
+  forall(i in 1..n_dests) (
     path_lengths[i] = sum([if subcircuits[i, j] != j then 1 else 0 endif | j in 1..graph_size])
   )
 ;
 
 % Construct the path
 constraint
-  forall(i in 1..n_dest) (
+  forall(i in 1..n_dests) (
     paths[i, 1] = start
   )
 ;
 constraint
-  forall(i in 1..n_dest, j in 1..path_lengths[i]-1) (
+  forall(i in 1..n_dests, j in 1..path_lengths[i]-1) (
     paths[i, j+1] = subcircuits[i, paths[i, j]]
+  )
+;
+
+% Setup used path matrix
+constraint
+  forall(i in 1..n_dests, j in 1..graph_size) (
+    if j != subcircuits[i, j]
+      then adjacency_matrix_used[j, subcircuits[i, j]] = 1 /\ adjacency_matrix_used[subcircuits[i, j], j] = 1
+    endif
   )
 ;
 
 % Sum total cost
 constraint total_cost =
-  sum([if path_costs[i, j] != -1 then path_costs[i, j] else 0 endif | i in 1..n_dest, j in 1..graph_size]) - 
-  sum([if path_costs[i, j] == path_costs[i+1, j] then path_costs[i, j] else 0 endif | i in 1..n_dest-1, j in 1..graph_size]);
+  sum(
+    [
+      if adjacency_matrix_used[i, j] == 1 /\ adjacency_matrix[i, j] != -1
+        then adjacency_matrix[i, j]
+        else 0
+      endif
+      | i in 1..graph_size, j in 1..graph_size
+    ]
+  ) / 2
+;
 
 % Minimize the total cost 
 solve minimize total_cost;
 
 % Print result
 output
-  ["Subcircuits:"] ++ [if j == 1 then "\n" else "" endif ++ show(j) ++ "->" ++ show(subcircuits[i, j]) ++ " " | i in 1..n_dest, j in 1..graph_size] ++
-  ["\nPaths:"] ++ [if j == 1 then "\n" else "" endif ++ show(paths[i, j]) ++ " " | i in 1..n_dest, j in 1..graph_size] ++
-  ["\nPath lengths: " ++ show(path_lengths)] ++
-  ["\nPath costs:"] ++ [if j == 1 then "\n" else "" endif ++ show(path_costs[i, j]) ++ " " | i in 1..n_dest, j in 1..graph_size] ++
-  ["\nTotal cost: " ++ show(total_cost)] ++
-  ["\nGraph:"] ++ [if j == 1 then "\n" else "" endif ++ show(adjacency_matrix[i, j]) ++ " " | i in 1..graph_size, j in 1..graph_size];
+  ["Graph:\n"] ++ [show2d(adjacency_matrix)] ++
+  ["Graph used:\n"] ++ [show2d(adjacency_matrix_used)] ++
+  ["Subcircuits:\n"] ++ [show2d(subcircuits)] ++
+  ["Paths:\n"] ++ [show2d(paths)] ++
+  ["Path lengths: " ++ show(path_lengths)] ++
+  ["\nPath costs:\n"] ++ [show2d(path_costs)] ++
+  ["Total cost: " ++ show(total_cost)];
