@@ -17,7 +17,8 @@ array[1..n_dests, 1..graph_size] of var set of int: allPaths;
 array[1..n_dests, 1..graph_size] of var int: subcircuitPath;
 array[1..graph_size, 1..graph_size] of var 0 ..max(cost): nodesVisited;
 array[1..graph_size] of var int: path_costs;
-var int: total_cost; 
+var int: totalCost; 
+var int: subCost;
 
 constraint
 forall(i in 1..n_dests, j in 1..graph_size)
@@ -31,8 +32,8 @@ forall(i in 1..n_dests, j in 1..graph_size)
     {start | edgeMove in 1..n_dests where (i == dest[j] )}
     union
     {edgeMove | edgeMove in 1..graph_size where (edgeMove != start /\ edgeMove != dest[i] /\ edgeMove == j)}
-  );
-  
+
+);
   
 % prepares for subcircuit
 constraint forall(i in 1..n_dests, j in 1..graph_size)(
@@ -71,10 +72,14 @@ constraint
   );
 
 % Sum total cost
-constraint total_cost = sum([path_costs[i] | i in 1..graph_size-1]);
+constraint totalCost = sum([path_costs[i] | i in 1..graph_size-1]);
+
+%removes unwanted cost.
+constraint
+  subCost = sum(i in 1..n_dests)(if adjacency_matrix[dest[i],start]!=0 then adjacency_matrix[dest[i],start] else 0 endif);
 
 % Minimize the total cost 
-solve minimize total_cost;
+solve minimize totalCost;
 
 % Print result
 output[
@@ -82,6 +87,7 @@ output[
   "\nsubcircuitPath: \n" ++ show2d(subcircuitPath) ++
   "\nvisited nodes: \n" ++ show2d(nodesVisited) ++
   "\nPath costs: " ++ show(path_costs) ++
-  "\nTotal cost: " ++ show(total_cost) ++
+  "\nsub cost: " ++ show(subCost) ++
+  "\nTotal cost: " ++ show(totalCost - subCost) ++
   "\nGraph: \n" ++ show2d(adjacency_matrix)
 ]
