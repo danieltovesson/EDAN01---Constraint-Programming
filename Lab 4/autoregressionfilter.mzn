@@ -16,8 +16,8 @@ array[1..n] of set of int: dependencies;
 
 % Starting times
 array[1..n] of var int: all_starting_times;
-array[1..length(add)] of var int add_starting_times;
-array[1..length(mul)] of var int mul_starting_times;
+array[1..length(add)] of var int: add_starting_times;
+array[1..length(mul)] of var int: mul_starting_times;
 
 % Task delays
 int: max_del = if del_add > del_mul then del_add else del_mul endif;
@@ -35,19 +35,20 @@ array[1..length(mul)] of var 1..number_mul: mul_execution_resources;
 
 % Set all_starting_times, all_task_delays and all_execution_resources
 constraint
-  forall(i in 1..n) (
-    
+  forall(i in 1..length(add)) (
+    all_starting_times[add[i]] = add_starting_times[i] /\
+    all_task_delays[add[i]] = add_task_delays[i] /\
+    all_execution_resources[add[i]] = add_execution_resources[i]
+  ) /\
+  forall(i in 1..length(mul)) (
+    all_starting_times[mul[i]] = mul_starting_times[i] /\
+    all_task_delays[mul[i]] = mul_task_delays[i] /\
+    all_execution_resources[mul[i]] = mul_execution_resources[i]
   )
 ;
 
 % Precedence constraints
-constraint
-  forall(i in 1..n) (
-    if length(dependencies[i]) == 2
-      then tasks[dependencies[i][1]] + task_delays[dependencies[i][1]] <= tasks[dependencies[i][2]]
-    endif
-  )
-;
+%constraint
 
 % Resource constraints
 %constraint
