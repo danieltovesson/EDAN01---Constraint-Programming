@@ -1,24 +1,14 @@
 include "globals.mzn";
 
-% Get input from user (prefix is for parameter input field order)
-int: a_graph_size;
-int: b_start;
-int: c_n_dests;
-array[1..c_n_dests] of 1..a_graph_size: d_dest;
-int: e_n_edges;
-array[1..e_n_edges] of 1..a_graph_size: f_from;
-array[1..e_n_edges] of 1..a_graph_size: g_to;
-array[1..e_n_edges] of int: h_cost;
-
 % Input variables
-int: graph_size = a_graph_size;
-int: start = b_start;
-int: n_dests = c_n_dests;
-array[1..n_dests] of 1..graph_size: dest = d_dest;
-int: n_edges = e_n_edges;
-array[1..n_edges] of 1..graph_size: from = f_from;
-array[1..n_edges] of 1..graph_size: to = g_to;
-array[1..n_edges] of int: cost = h_cost;
+int: graph_size;
+int: start;
+int: n_dests;
+array[1..n_dests] of 1..graph_size: dest;
+int: n_edges;
+array[1..n_edges] of 1..graph_size: from;
+array[1..n_edges] of 1..graph_size: to;
+array[1..n_edges] of int: cost;
 
 % Create adjacency matrix
 array[1..graph_size, 1..graph_size] of var -1..max(cost): adjacency_matrix = array2d(1..graph_size, 1..graph_size,
