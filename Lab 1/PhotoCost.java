@@ -26,10 +26,8 @@ public class PhotoCost {
 
     // Decision variables
     IntVar[] seq = new IntVar[n];
-    IntVar[] indexes = new IntVar[n];
     for (int i=0; i<n; i++) {
       seq[i] = new IntVar(store, "p"+i, 1, n);
-      indexes[i] = new IntVar(store, "i"+i, 1, n);
     }
     IntVar[] fulfilled = new IntVar[n_prefs];
     for (int i=0; i<n_prefs; i++) {
@@ -39,6 +37,15 @@ public class PhotoCost {
 
     // Constraints
     store.impose(new Alldifferent(seq));
+    for (int i=0; i<n_prefs; i++) {
+      int[] preference = prefs[i];
+      IntVar first = seq[preference[0]-1];
+      IntVar second = seq[preference[1]-1];
+      IntVar distance = new IntVar(store, 0, n);
+      store.impose(new Distance(first, second, distance));
+      store.impose(new Reified(new XgtC(distance, 1), fulfilled[i]));
+    }
+    store.impose(new Sum(fulfilled, cost));
 
     Search<IntVar> search = new DepthFirstSearch<IntVar>();
     SelectChoicePoint<IntVar> select = new SimpleSelect<IntVar>(
@@ -51,7 +58,8 @@ public class PhotoCost {
 
     if (Result) {
       System.out.println("\n*** Yes");
-      System.out.println("Solution : "+ java.util.Arrays.asList(cost));
+      System.out.println("Solution : " + java.util.Arrays.asList(cost));
+      System.out.println("Fulfilled: " + (n_prefs - cost.value()));
     } else {
       System.out.println("\n*** No");
     }
