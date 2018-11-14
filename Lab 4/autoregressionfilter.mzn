@@ -82,13 +82,15 @@ output
   "All starting times:\n" ++ show(all_starting_times) ++
   "\nAdd starting times:\n" ++ show(add_starting_times) ++
   "\nMul starting times:\n" ++ show(mul_starting_times) ++
-  "\nAll task delays:\n" ++ show(all_task_delays) ++
-  "\nAdd task delays:\n" ++ show(add_task_delays) ++
-  "\nMul task delays:\n" ++ show(mul_task_delays) ++
-  "\nAll task delays:\n" ++ show(all_execution_resources) ++
-  "\nAdd execution resources:\n" ++ show(add_execution_resources) ++
-  "\nMul execution resources:\n" ++ show(mul_execution_resources) ++
+  %"\nAll task delays:\n" ++ show(all_task_delays) ++
+  %"\nAdd task delays:\n" ++ show(add_task_delays) ++
+  %"\nMul task delays:\n" ++ show(mul_task_delays) ++
+  %"\nAll task delays:\n" ++ show(all_execution_resources) ++
+  %"\nAdd execution resources:\n" ++ show(add_execution_resources) ++
+  %"\nMul execution resources:\n" ++ show(mul_execution_resources) ++
   "\nUsed number of adders:\n" ++ show(used_number_add) ++
   "\nUsed number of multipliers:\n" ++ show(used_number_mul) ++
+  "\nAdd:\n" ++ show(add) ++
+  "\nMul:\n" ++ show(mul) ++
   "\nClock cycles:\n" ++ show(clock_cycles)
 ];
